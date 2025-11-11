@@ -17,10 +17,8 @@ class PindahController extends Controller
 {
     public function index()
     {
-        // Ambil semua pemesanan pengguna saat ini
         $bookings = Booking::where('user_id', auth()->id())
                             ->where(function ($query) {
-                            // Booking member yang masih valid
                             $query->where('booking_type', 'member')
                                     ->where('valid_until', '>=', Carbon::today()->format('Y-m-d'));
                             $query->orWhere(function ($q) {
@@ -28,63 +26,50 @@ class PindahController extends Controller
                                     ->where('status', 'approved');
                             });
                             })
-                           ->orderBy('booking_date') // Urutkan berdasarkan tanggal pemesanan
+                           ->orderBy('booking_date')
                            ->get();
         
-        // Kirim data pemesanan sebelumnya ke view
         $fields = Field::all();
         return view('jadwal.pindah', compact('bookings', 'fields'));
     }
 
     public function formPindah($id)
     {
-        // Cari pemesanan member berdasarkan ID
         $booking = Booking::findOrFail($id);
-        
-        // Pastikan pemesanan milik pengguna saat ini
         if ($booking->user_id !== auth()->id()) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk memperpanjang pesanan ini.');
         }
 
-        // Kirim data pemesanan sebelumnya ke view
         $fields = Field::all();
         return view('jadwal.form_pindah', compact('booking', 'fields'));
     }
 
     public function formPindahMember($id)
     {
-        // Cari pemesanan member berdasarkan ID
         $booking = Booking::findOrFail($id);
         
-        // Pastikan pemesanan milik pengguna saat ini
         if ($booking->user_id !== auth()->id()) {
             return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk memperpanjang pesanan ini.');
         }
 
-        // Kirim data pemesanan sebelumnya ke view
         $fields = Field::all();
         return view('jadwal.form_pindah_member', compact('booking', 'fields'));
     }
 
-    // Proses pengajuan pindah jadwal
     public function pengajuanPindahRegular(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
         $pindahJadwal = Pindah:: all();
         $fields = Field::all();
-        // Validasi input
         $validated = $request->validate([
             'field_id' => 'nullable|exists:fields,id',
             'tggl_baru' => 'nullable|date|after_or_equal:today',
             'waktu_mulai' => 'nullable|date_format:H:i',
             'waktu_selesai' => 'nullable|date_format:H:i|after:waktu_mulai',            
         ]);
-
-        // Gunakan nilai default jika input kosong
         $waktuMulai = $request->input('waktu_mulai') ?? $booking->start_time;
         $waktuSelesai = $request->waktu_selesai;
 
-        // Cek konflik untuk booking regular
         if ($request->booking_type === 'regular') {
             $conflict = Booking::where('field_id', $validated['field_id'])
                 ->where('booking_date', $validated['tggl_baru'])
@@ -104,20 +89,15 @@ class PindahController extends Controller
                 return redirect()->back()->with('error', 'Jadwal sudah dipesan. Silakan pilih waktu lain.');
             }
         }
-
-        // Pastikan pemesanan milik pengguna yang sedang login
         if ($booking->user_id !== auth()->id()) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses ke pemesanan ini.');
         }
-
-        // Perbarui status menjadi "pending_reschedule"
         $booking->update([ 
             'field_id' => $validated['field_id'],       
             'booking_date' => $validated['tggl_baru'],
             'start_time' => $waktuMulai,
             'end_time' => $waktuSelesai,
         ]);
-
         $booking->update(['status' => 'approved']);
 
         return redirect()->route('pindah_jadwal')->with('success', 'Jadwal berhasil diperbarui.');
@@ -127,20 +107,15 @@ class PindahController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Pastikan booking milik user yang sedang login dan adalah booking member
         if ($booking->user_id !== Auth::id() || $booking->booking_type !== 'member') {
             abort(403);
         }
 
-        // Ambil hari-hari yang dipilih dari request
         $selectedDays = $request->input('days', []); // Ini adalah array value dari checkbox yang dicentang (e.g., ['Monday', 'Tuesday'])
-
-        // Buat aturan validasi secara dinamis berdasarkan hari yang dipilih
         $validationRules = [
             'field_id' => 'required|exists:fields,id',
-            // 'total_hours' => 'required|numeric|min:12', // total_hours readonly, tidak perlu divalidasi di sini
-            'days' => 'required|array|min:1', // Validasi bahwa setidaknya satu hari dipilih
-            'days.*' => 'string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday', // Validasi format hari
+            'days' => 'required|array|min:1',
+            'days.*' => 'string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
         ];
 
         // Tambahkan aturan untuk setiap hari yang dipilih
@@ -150,10 +125,7 @@ class PindahController extends Controller
             $validationRules["schedule_details.{$day}.end"] = 'required|date_format:H:i|after:schedule_details.' . $day . '.start';
         }
 
-        // Validasi input dasar
         $validator = Validator::make($request->all(), $validationRules);
-
-        // Cek apakah validasi gagal
         if ($validator->fails()) {
             return redirect()->back()
                              ->withErrors($validator)
@@ -161,29 +133,23 @@ class PindahController extends Controller
         }
 
         $validated = $validator->validated();
-
-        // Ambil schedule_details yang sudah divalidasi (hanya berisi hari yang dipilih)
         $newScheduleDetails = $validated['schedule_details'];
 
-        // --- LOGIKA VALIDASI SESUAI FORM BOOKING UTAMA (VALIDASI DURASI) ---
-        // 1. Validasi Total Jam Mingguan Harus Sama dengan Alokasi
         $totalHours = $booking->total_hours; // Ambil dari booking lama, karena readonly di form
-        $allocatedWeeklyHours = $totalHours / 4; // Hitung alokasi mingguan
+        $allocatedWeeklyHours = $totalHours / 4;
 
         $scheduledWeeklyHours = 0;
         foreach ($newScheduleDetails as $day => $timeRange) {
             $start = $timeRange['start'];
             $end = $timeRange['end'];
 
-            // Parsing waktu untuk menghitung durasi akurat
             $startCarbon = Carbon::createFromFormat('H:i', $start);
             $endCarbon = Carbon::createFromFormat('H:i', $end);
 
-            // Tidak perlu cek lessThanOrEqualTo karena sudah di validasi 'after'
-            $durationInMinutes = $endCarbon->diffInMinutes($startCarbon);
-            $durationInHours = $durationInMinutes / 60;
+            $durasiInMenit = $endCarbon->diffInMinutes($startCarbon);
+            $durasiInJam = $durasiInMenit / 60;
 
-            $scheduledWeeklyHours += $durationInHours;
+            $scheduledWeeklyHours += $durasiInJam;
         }
 
         // Validasi harus persis sama (dengan toleransi kecil)
@@ -280,8 +246,5 @@ class PindahController extends Controller
             Log::error('Booking Member Pindah Jadwal Error: ' + $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
         }
-    }
-
-
-        
+    }        
 }

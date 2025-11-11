@@ -15,10 +15,10 @@
     
     <div class="card h4 shadow mb-2">
             <div class="card-header row">
-                <a class="card-title mt-0 mb-1 col-9 text-center">
+                <a class="card-title mt-0 mb-1 col-sm-9 text-center">
                     Halo Admin, Selamat Datang di Manajemen Pemesanan!
                 </a>
-                <button type="button" class="btn btn-primary col-3" data-bs-toggle="modal" data-bs-target="#modalCreate">
+                <button type="button" class="btn btn-primary1 col-sm-3" data-bs-toggle="modal" data-bs-target="#modalCreate">
                     <i class="tf-icons bx bx-plus-circle"></i>
                     Tambahkan Pemesanan
                 </button>
@@ -37,8 +37,8 @@
                 <h3>Pesanan Masuk</h3>
             </div>
         </div>
-        <div class="card mb-3 mt-0">   
-                <table class="table table-responsive text-center">
+        <div class="card mb-3 mt-0 table-responsive">   
+                <table class="table text-center">
                     <thead>
                         <tr>
                             <th>Nama Pemesan</th>

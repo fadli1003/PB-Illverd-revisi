@@ -16,7 +16,7 @@
             {{ session('error') }}
         </div>
     @endif
-    <div class="card mb-4">
+    <div class="card mb-4 table-responsive">
         <!-- Tampilkan tabel riwayat pemesanan -->
             <table class="table table-bordered">
                 <thead>
@@ -79,7 +79,7 @@
                             </td>                                       
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow btn-toggle"
                                         data-bs-toggle="dropdown">
                                         <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>

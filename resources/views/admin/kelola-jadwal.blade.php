@@ -14,25 +14,21 @@
     @endif
 
     <div class="card mt-0 mb-0">
-            <div class="card-header h4">
-                <div class="row mb-0 mt-0">
-                    <div class="col-3">
-                    </div>            
-                    <div class="col-6 text-center">
-                        <a>Pilih Jadwal yang Ingin Dikelola</a>                    
-                    </div>
-                    <div class="col-3">
-                        <form action="{{ route('kelola_jadwal') }}" method="GET">
-                            <div class="input-group">
-                                <input type="month" name="month" class="form-control" value="{{ request('month', now()->format('Y-m')) }}">
-                                <button class="btn btn-primary" type="submit">Tampilkan</button>
-                            </div>
-                        </form>
-                    </div>
+            <div class=" mb-0 mt-0">                               
+                <div class="card-header mb-0 text-center">
+                    <h3 class="mb-0">Pilih Jadwal yang Ingin Dikelola</h3>                   
+                </div>
+                <div class="mt-0 ml-2">
+                    <form action="{{ route('kelola_jadwal') }}" method="GET">
+                        <div class="form-input">
+                            <input type="month" name="month" class="form-contro input-tggl" value="{{ request('month', now()->format('Y-m')) }}">
+                            <button class="btn jadwal-btn ml-2" type="submit">Tampilkan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
     </div>
-    <div class="card mb-3">
+    <div class="card mb-3 table-responsive mt-0">
             <table class="table table-bordered text-center">
                 <thead>
                     <tr>
@@ -88,7 +84,7 @@
                                 @elseif($booking->status === 'approved')
                                     <span class="badge bg-success">Disetujui</span>
                                 @elseif($booking->status === 'pembatalan')
-                                    <span class="badge bg-danger">Mengajukan Pembatalan</span>
+                                    <span class="badge bg-danger">Pembatalan</span>
                                 @elseif($booking->status === 'membership')
                                     <span class="badge bg-danger">Membership</span>
                                 @else
@@ -97,21 +93,21 @@
                             </td>
                             <td>
                                 <div class="dropdown">
-                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow btn-toggle"
                                             data-bs-toggle="dropdown">
                                             <i class="bx bx-dots-vertical-rounded"></i>
                                     </button>
                                     <div class="dropdown-menu text-center">                                                                                
                                         <a href="{{ url('admin/edit_pesanan/' . $booking->id) }}" method="POST"
-                                            class="btn btn-secondary btn-sm" style="color: aliceblue">Edit
+                                            class="btn btn-secondary btn-sm edit-btn" >Edit
                                         </a>
                                         <form action="{{ url('admin/hapus-pesanan/' . $booking->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pesanan ini?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" >Hapus</button>
+                                            <button type="submit" class="btn btn-danger btn-sm cancel-btn-table" >Hapus</button>
                                         </form>
                                         @if($booking->booking_type === 'member')
-                                            <a href="{{ route('memberExtend', ['id' => $booking->id]) }}" method="POST" class="btn btn-warning btn-sm">
+                                            <a href="{{ route('memberExtend', ['id' => $booking->id]) }}" method="POST" class="btn btn-warning btn-sm secondary-btn">
                                                 Perpanjang
                                             </a>
                                         @endif

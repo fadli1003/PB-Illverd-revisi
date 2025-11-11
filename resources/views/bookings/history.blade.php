@@ -8,6 +8,19 @@
         <div class="card-header text-center">
             <h4 class="mb-0">Riwayat Pemesanan</h4>
         </div>
+        <div class="mt-2">
+            <form action="{{ route('riwayat') }}" method="GET">
+                <div class="input-group">
+                    <input type="month" name="month" class="input-tggl" value="{{ request('month', now()->format('Y-m')) }}">
+                    <button class="btn btn-primary jadwal-btn" type="submit">Tampilkan</button>
+                    @if(request('month'))
+                        <a href="{{ route('riwayat') }}" class="btn-all-riwayat">
+                            Semua Riwayat
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Tampilkan pesan kesalahan jika ada -->
@@ -17,15 +30,15 @@
         </div>
     @endif
 
-    <div class="card mb-3">
+    <div class="card mb-3 table-responsive">
     <!-- Tampilkan tabel riwayat pemesanan -->
         <table class="table table-bordered">
             <thead>
                 <tr class="text-center">
-                    <th>Tanggal Pemesanan</th>
+                    <th>Dipesan Tanggal</th>
                     <th>Jadwal Pakai</th>
                     <th>Lapangan</th>
-                    <th>Jenis Pemesanan</th>
+                    <th>Jenis</th>
                     <th>Status</th>
                     <th>Berlaku Sampai</th>               
                     <th>Total Harga</th>
@@ -41,7 +54,7 @@
                     @endphp
                     <tr>
                         <td class="text-center">{{ \Carbon\Carbon::parse($booking->created_at)->format('d M Y') }}</td>
-                        <td class="text-center">
+                        <td class="text-center" style="min-width: 120px">
                             @if ($booking->booking_type === 'member')
                                 @php
                                     $jadwal = json_decode($booking->schedule_details, true); // Decode JSON menjadi array
@@ -58,16 +71,16 @@
 
                                 @if (is_array($jadwal) && !empty($jadwal))
                                     @foreach ($jadwal as $day => $timeRange)
-                                        {{ $dayMapping[$day] ?? 'Hari tidak dikenali' }} 
-                                        Jam {{ $timeRange['start'] }} - {{ $timeRange['end'] }}
-                                        @if (!$loop->last),@endif 
+                                        {{ $dayMapping[$day] ?? 'Hari tidak dikenali' }}, 
+                                         {{ $timeRange['start'] }} - {{ $timeRange['end'] }}
+                                        @if (!$loop->last) <br> @endif 
                                     @endforeach
                                 @else
                                     <span class="text-danger">Jadwal tidak tersedia</span>
                                 @endif
                             @else
                                 {{ \Carbon\Carbon::parse($booking->booking_date)->format('d M Y') }}
-                                Jam {{ $booking->start_time }} - {{ $booking->end_time }}
+                                <br/> {{ $booking->start_time }} - {{ $booking->end_time }}
                             @endif
                         </td>
                         <td class="text-center">{{ $booking->field->name }}</td>
@@ -93,27 +106,14 @@
                             $membership->sisa_bayar + $booking->remaining_amount : $booking->remaining_amount), 0, ',', '.') }}</td>                        
                         <td>
                             <div class="dropdown">
-                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow"
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow btn-toggle"
                                     data-bs-toggle="dropdown">
                                     <i class="bx bx-dots-vertical-rounded"></i>
                                 </button>
                                 <div class="dropdown-menu text-center">                                    
-                                    <a href="{{ route('cetak', ['id' => $booking->id]) }}" class="btn btn-primary btn-sm" target="_blank">
-                                        Cetak
-                                    </a>                                   
-                                    @if ($booking->proof_of_payment)
-                                        @if ($booking->status === 'membership' && $membership)
-                                            <a class="btn btn-primary btn-sm" href="{{ asset('storage/' . $membership->bukti_transfer ) }}" target="_blank">
-                                                    Lihat Bukti Transfer
-                                            </a>
-                                        @else
-                                            <a class="btn btn-primary btn-sm" href="{{ asset('storage/' . $booking->proof_of_payment ) }}" target="_blank">
-                                                    Lihat Bukti Transfer
-                                            </a>
-                                        @endif
-                                    @else
-                                        <span class="text-danger">Tidak Ada</span>
-                                    @endif                                    
+                                    <a href="{{ route('cetak', ['id' => $booking->id]) }}" class="btn btn-primary btn-sm mb-3" target="_blank">
+                                        Cetak <br>
+                                    </a>                                
                                     @if (in_array($booking->status, ['pending', 'approved', 'membership']))
                                         <!-- Hitung H-2 -->
                                         @php
@@ -138,7 +138,7 @@
                                             @else
                                                 <span class="text-danger">Tidak dapat mengajukan pembatalan</span>
                                             @endif
-                                        @elseif ($booking->booking_type === 'member' && $booking->status === 'approved'))                           
+                                        @elseif ($booking->booking_type === 'member' && $booking->status === 'approved')                           
                                             <a href="{{ route('memberExtend', ['id' => $booking->id]) }}" method="POST" class="btn btn-warning btn-sm">
                                                 perpanjang
                                             </a>
@@ -173,7 +173,7 @@
 
     <!-- Tabel Membership yang Telah Diperpanjang -->
     <h3 class="text-center">Membership yang Telah Diperpanjang</h3>
-    <div class="card mb-3">
+    <div class="card mb-3 table-responsive">
         <table class="table table-bordered text-center">
             <thead>
                 <tr>

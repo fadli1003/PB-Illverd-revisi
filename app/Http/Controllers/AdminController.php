@@ -14,21 +14,17 @@ class AdminController extends Controller
 {
     public function kelolaJadwal(Request $request)
     {
-        // $bookings = Booking::All();
+        $bulan = $request->input('month', now()->format('Y-m'));
 
-        // Ambil bulan dari request, default ke bulan saat ini
-        $month = $request->input('month', now()->format('Y-m'));
+        $tgglAwal = Carbon::parse($bulan)->startOfMonth();
+        $tgglAkhir = Carbon::parse($bulan)->endOfMonth();
+        $sekarang = now()->toDateString();
 
-        // Format bulan menjadi tanggal awal dan akhir
-        $startDate = Carbon::parse($month)->startOfMonth();
-        $endDate = Carbon::parse($month)->endOfMonth();
-        $today = now()->toDateString();
-
-        $bookings = Booking::where(function ($query) use ($startDate, $endDate, $today) {
-            $query->whereBetween('booking_date', [$startDate, $endDate])
-                ->where('booking_date', '>=', $today)
-                ->orWhereBetween('valid_until', [$startDate, $endDate])
-                ->where('booking_date', '>=', $today);
+        $bookings = Booking::where(function ($query) use ($tgglAwal, $tgglAkhir, $sekarang) {
+            $query->whereBetween('booking_date', [$tgglAwal, $tgglAkhir])
+                ->where('booking_date', '>=', $sekarang)
+                ->orWhereBetween('valid_until', [$tgglAwal, $tgglAkhir])
+                ->where('booking_date', '>=', $sekarang);
         })
         ->with('field')
         ->orderBy('booking_date')
@@ -39,15 +35,11 @@ class AdminController extends Controller
 
     public function pesananMasuk()
     {
-        // Hitung tanggal kemarin, hari ini, dan besok
-        $yesterday = Carbon::yesterday()->format('Y-m-d');
-        $today = Carbon::today()->format('Y-m-d');
+        $kemarin = Carbon::yesterday()->format('Y-m-d');
+        $hariIni = Carbon::today()->format('Y-m-d');
 
-        // Ambil booking yang created_at-nya antara awal kemarin sampai akhir besok
-        // Ini memastikan kita menangkap semua booking dari 3 hari tersebut
-        $bookings = Booking::whereDate('created_at', '>=', $yesterday)
-                           ->whereDate('created_at', '<=', $today)
-                           // ->where('status', 'approved') // Hapus filter status ini jika ingin semua status
+        $bookings = Booking::whereDate('created_at', '>=', $kemarin)
+                           ->whereDate('created_at', '<=', $hariIni)
                            ->get();
 
         $fields = Field::all();
@@ -57,20 +49,11 @@ class AdminController extends Controller
 
     public function pengajuan()
     {
-        // Ambil semua pesanan masuk beserta data pemesan
         $bookings = Booking::whereIn('status',['pembatalan', 'memberExtend', 'pindah', 'pindah_membership'])->get();
 
         return view('admin.pengajuan', compact('bookings'));
     }
      
-    // public function tolakOrder($id)
-    // {
-    //     $booking = Booking::findOrFail($id);
-    //     $booking->update(['status' => 'ditolak']);
-
-    //     return redirect()->back()->with('success', 'Pesanan berhasil ditolak.');
-    // }
-
     public function deleteOrder($id)
     {
         $booking = Booking::findOrFail($id);
@@ -81,9 +64,7 @@ class AdminController extends Controller
 
     public function edit($id)
     {
-        // Cari pemesanan member berdasarkan ID
-        $booking = Booking::findOrFail($id);        
-        // Kirim data pemesanan sebelumnya ke view
+        $booking = Booking::findOrFail($id);      
         $fields = Field::all();
         if($booking->booking_type === 'regular'){
             return view('admin.edit', compact('booking', 'fields'));
@@ -96,7 +77,6 @@ class AdminController extends Controller
     {        
         $booking = Booking::findOrFail($id);        
         $fields = Field::all();
-        // Validasi input
         $validated = $request->validate([
             'field_id' => 'nullable|exists:fields,id',
             'tggl_baru' => 'nullable|date|after_or_equal:today',
@@ -104,12 +84,11 @@ class AdminController extends Controller
             'waktu_selesai' => 'nullable|date_format:H:i|after:waktu_mulai',
         ]);
 
-        // Gunakan nilai default jika input kosong
         $waktuMulai = $request->input('waktu_mulai') ?? $booking->start_time;
         $waktuSelesai = $request->input('waktu_selesai') ?? $booking->end_time;
         $ubahDp = $request->input('dp_baru') ?? $booking->dp_amount;
         $sisaBayar = $booking->amount_paid - $request->dp_baru;
-        // Cek konflik untuk booking regular
+
         if ($request->booking_type === 'regular') {
             $conflict = Booking::where('field_id', $validated['field_id'])
                 ->where('booking_date', $validated['tggl_baru'])
@@ -142,7 +121,6 @@ class AdminController extends Controller
 
     public function editPesananMember(Request $request, $id)
     {
-        // Cari pemesanan member berdasarkan ID
         $booking = Booking::findOrFail($id); 
         $pindahJadwal = Pindah:: all();
         $fields = Field::all();       
@@ -151,8 +129,6 @@ class AdminController extends Controller
                 'schedule_details' => 'required_if:booking_type,member|array',
                 'days' => 'required_if:booking_type,member|array|min:1',
             ]);        
-
-        // Jika pemesanan adalah member, validasi schedule_details
         if ($request->booking_type === 'member') {
             $selectedDays = $request->input('days', []);
             $scheduleDetails = $request->input('schedule_details', []);
@@ -160,20 +136,17 @@ class AdminController extends Controller
             foreach ($selectedDays as $day) {
                 $timeRange = $scheduleDetails[$day] ?? null;
 
-                // Pastikan start dan end tidak kosong
                 if (!$timeRange || !$timeRange['start'] || !$timeRange['end']) {
                     return redirect()->back()->with('error', "Jadwal untuk hari $day tidak lengkap.");
                 }
 
-                // Validasi format waktu
                 try {
                     Carbon::createFromFormat('H:i', $timeRange['start']);
                     Carbon::createFromFormat('H:i', $timeRange['end']);
                 } catch (\Exception $e) {
                     return redirect()->back()->with('error', "Format waktu untuk hari $day tidak valid.");
                 }
-
-                // Pastikan waktu selesai lebih besar dari waktu mulai
+                
                 $startTime = Carbon::createFromFormat('H:i', $timeRange['start']);
                 $endTime = Carbon::createFromFormat('H:i', $timeRange['end']);
                 if ($endTime->lessThanOrEqualTo($startTime)) {
@@ -182,7 +155,6 @@ class AdminController extends Controller
             }            
         }
         
-        // Filter hanya hari yang valid (dipilih dan diisi start & end)
         $filteredSchedule = [];
         if ($request->booking_type === 'member') {
             
@@ -200,11 +172,10 @@ class AdminController extends Controller
             }
 
             if (empty($filteredSchedule)) {
-                return redirect()->back()->with('error', 'Harap isi waktu mulai dan selesai untuk minimal satu hari yang dipilih.');
+                return redirect()->back()->with('error', 'Harap isi waktu mulai dan selesai, minimal pilih satu hari.');
             }
         }
 
-        // Cek konflik untuk booking member
         if ($request->booking_type === 'member') {
             foreach ($request->schedule_details as $day => $timeRange) {
                 $startTime = $timeRange['start'];
@@ -220,8 +191,7 @@ class AdminController extends Controller
                 
             }
         }
-
-        // Simpan ke database       
+      
         if ($request->booking_type == 'member') {
             $booking->update([                    
                 'field_id' => $validated['field_id'],                    
@@ -242,8 +212,6 @@ class AdminController extends Controller
     public function setujuiCancel($id)
     {
         $booking = Booking::findOrFail($id);
-
-        // Ubah status menjadi canceled
         $booking->update(['status' => 'dibatalkan']);
 
         return redirect()->back()->with('success', 'Pembatalan pesanan disetujui.');
@@ -252,79 +220,8 @@ class AdminController extends Controller
     public function tolakCancel($id)
     {
         $booking = Booking::findOrFail($id);
-
-        // Kembalikan status ke approved
         $booking->update(['status' => 'approved']);
 
         return redirect()->back()->with('success', 'Pembatalan pesanan ditolak.');
-    }
-    
-    // public function perpanjangMember($id)
-    // {
-    //     $membership = Membership::findOrFail($id);        
-    //     $booking = $membership->booking;
-    //     // Perbarui data pemesanan dengan jadwal baru
-    //     $booking->update([
-    //         'pending_data' => [
-    //         'field_id' => $membership->field_id,
-    //         'valid_until' => $membership->new_valid_until,
-    //         'total_hours' => $booking->total_hours + $membership->additional_hours,
-    //         'amount_paid' => $booking->amount_paid + $membership->total_bayar,
-    //         'dp_amount' => $booking->dp_amount + $membership->jumlah_bayar,
-    //         'remaining_amount' => $booking->remaining_amount + $membership->sisa_bayar,
-    //         'schedule_details' => $membership->jadwal,
-    //     ],
-    //     'status_perpanjangan' => 'pending', // Jadwal baru belum aktif
-    //     'status' => 'membership'
-    //     ]);
-    //     $membership->update(['status' => 'disetujui']);
-
-    //     return redirect()->back()->with('success', 'Perpanjangan member berhasil disetujui.');
-    // }
-
-    // public function tolakPerpanjangan(Request $request, $id)
-    // {
-    //     $booking = Booking::findOrFail($id);
-    //     $membership = Membership ::findOrFail($id);
-    //     $membership->update(['status' => 'perpanjanganDitolak']);
-    //     $booking->update(['status' => 'approved']);
-    //     return redirect()->back()->with('success', 'Perpanjangan member berhasil ditolak.');
-    // }
-
-    // public function setujuiPindah(Request $request, $id)
-    // {
-    //     $pindahJadwal = Pindah::findOrFail($id);
-    //     $booking = $pindahJadwal->booking;
-                
-    //     if ($booking->booking_type === 'regular') {
-    //         $booking->update([
-    //             'field_id' => $pindahJadwal->field_id, // Perbarui field_id
-    //             'booking_date' => $pindahJadwal->tggl_baru,
-    //             'start_time' => $pindahJadwal->waktu_mulai,
-    //             'end_time' => $pindahJadwal->waktu_selesai,
-    //             'status' => 'approved',
-    //         ]);
-    //     }else{
-    //         $booking->update([
-    //             'field_id' => $pindahJadwal->field_id, // Perbarui field_id
-    //             'schedule_details' => $pindahJadwal->jadwal_member,
-    //             'days' => $pindahJadwal->hari,             
-    //         ]);
-    //         if ($booking->status == 'pindah_membership'){$booking->update(['status' => 'membership']);
-    //         }else {$booking->update(['status' => 'approved']);}
-    //     }
-    //     $pindahJadwal->update(['status' => 'disetujui']);
-    //     return redirect()->back()->with('success', 'Pindah jadwal disetujui.');
-    // }
-    
-    // public function tolakPindah($id)
-    // {
-    //     $pindahJadwal = Pindah::findOrFail($id);
-    //     $booking = $pindahJadwal->booking;
-    //     $pindahJadwal->update(['status' => 'ditolak']);
-    //     if ($booking->status == 'pindah_membership'){$booking->update(['status' => 'membership']);
-    //         }else {$booking->update(['status' => 'approved']);}
-    //     $pindahJadwal->update(['status' => 'ditolak']);
-    //     return redirect()->back()->with('success', 'Pindah jadwal ditolak.');
-    // }    
+    }  
 }

@@ -2,9 +2,9 @@
 <!-- beautify ignore:start -->
 <html
   lang="en"
-  class="light-style layout-fixed"
+  {{-- class="light-style layout-fixed" --}}
   dir="ltr"
-  data-theme="theme-default"
+  {{-- data-theme="theme-default" --}}
   data-assets-path="{{ asset('assets/') }}"
 >
   <head>
@@ -14,42 +14,32 @@
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
     <meta name="description" content="" />
-    <title>Penyewaan PB ILLVERD</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="('assets/img/logo.png')" />
+    <title>PB ILLVERD | Penyewaan</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon.jpg')}}" />
+
+
+    <!-- Css Costum  -->
+    <link rel="stylesheet" href="{{ asset('assets/css/cssCustom.css') }}">
 
     <!-- Icons. Uncomment required icon fonts -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/boxicons.css') }}" />
 
+    {{-- Tailwind --}}    
+    {{-- @vite(['resources/css/app.css', 'resources/css/animations.css', 'resources/js/app.js']) --}}
     <!-- Core CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" class="template-customizer-core-css" />
-    <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}" class="template-customizer-theme-css" />
-    <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
+    {{-- <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" class="template-customizer-core-css" /> --}}
+    {{-- <link rel="stylesheet" href="{{ asset('assets/vendor/css/theme-default.css') }}" class="template-customizer-theme-css" /> --}}
+    {{-- <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" /> --}}
 
     <!-- Vendors CSS -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
 
-    <!-- Page CSS -->
-    <script src="https://code.jquery.com/jquery-3.7.1.slim.js"
-      integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
-    <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/datatables.min.css" rel="stylesheet">
-    
-    <script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.1.8/datatables.min.js"></script>
-    @stack('page-css')
 
     <!-- Helpers -->
     <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
 
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="{{ asset('assets/js/config.js') }}"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
   </head>
@@ -60,31 +50,26 @@
         <div class="layout-page">
           <!-- Navbar -->
           @include('layouts.navbar')
-          <!-- / Navbar -->
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
-            <!-- Content -->
 
+            <!-- Content -->
             <div class="container-fluid flex-grow-1 container-p-y">
               @yield('content')
             </div>
-            <!-- / Content -->
 
             <!-- Footer -->
             @include('layouts.footer')
-            <!-- / Footer -->
 
             <div class="content-backdrop fade"></div>
           </div>
-          <!-- Content wrapper -->
         </div>
       
       <!-- Overlay -->
       <div class="layout-overlay layout-menu-toggle"></div>
     </div>
     <!-- / Layout wrapper -->
-
 
     <!-- Core JS -->
     <!-- build:js assets/vendor/js/core.js -->

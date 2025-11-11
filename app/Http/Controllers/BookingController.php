@@ -17,75 +17,58 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {        
-        // Ambil tanggal hari ini sebagai default jika tidak ada tanggal yang dipilih
         $selectedDate = $request->input('date', Carbon::today()->format('Y-m-d'));
-        // Ambil semua lapangan
         $fields = Field::all();
-        
-        // Ambil semua pemesanan untuk tanggal yang dipilih (hanya yang sudah disetujui)
         $bookings = Booking::where(function ($query) use ($selectedDate) {
-                // Booking regular untuk tanggal tertentu YANG SUDAH DIBAYAR
                 $query->where('booking_date', $selectedDate)
                     ->where('payment_status', 'paid');
             })
             ->orWhere(function ($query) use ($selectedDate) {
-                // Booking member YANG MASIH VALID (valid_until >= hari_ini) DAN SUDAH DIBAYAR
                 $query->where('booking_type', 'member')
                     ->where('valid_until', '>=', Carbon::today()->format('Y-m-d'))
                     ->where('payment_status', 'paid');
             })
             ->get();
-        
-        // Decode schedule_details untuk setiap booking
+
         foreach ($bookings as $booking) {
             if (is_string($booking->schedule_details)) {
                 $booking->schedule_details = json_decode($booking->schedule_details, true);
             }
         }
-        
-        // Filter pemesanan member berdasarkan valid_until
+    
         $filteredBookings = $bookings->filter(function ($booking) use ($selectedDate) {
             if ($booking->booking_type === 'member' && $booking->valid_until) {
-                // Pastikan tanggal saat ini belum melewati valid_until
                 return Carbon::now()->lessThanOrEqualTo($booking->valid_until);
             }
-            return true; // Tampilkan pemesanan biasa atau tanpa valid_until
+            return true; 
         });
 
-        // timeslot untuk menu jadwal
         $timeSlots = [];
-        for ($hour = 7; $hour <= 22; $hour++) {
-            $timeSlots[] = sprintf('%02d:00:00', $hour);
+        for ($jam = 7; $jam <= 22; $jam++) {
+            $timeSlots[] = sprintf('%02d:00:00', $jam);
         }
         return view('bookings.create', compact('fields', 'filteredBookings', 'selectedDate', 'timeSlots'));
     }
 
     public function create(Request $request)
     {
-        // Ambil data jadwal dari query string
         $field_id = $request->query('field_id');
         $booking_date = $request->query('booking_date');
         $start_time = $request->query('start_time');
         $end_time = $request->query('end_time');
         $selectedDate = $request->query('booking_date');
 
-        // Ambil semua lapangan
         $fields = Field::all();
-        
-        // Ambil semua pemesanan untuk tanggal yang dipilih (hanya yang sudah disetujui)
         $bookings = Booking::where(function ($query) use ($selectedDate) {
-                // Booking regular untuk tanggal tertentu YANG SUDAH DIBAYAR
                 $query->where('booking_date', $selectedDate)
                     ->where('payment_status', 'paid');
             })
             ->orWhere(function ($query) use ($selectedDate) {
-                // Booking member YANG MASIH VALID (valid_until >= hari_ini) DAN SUDAH DIBAYAR
                 $query->where('booking_type', 'member')
                     ->where('valid_until', '>=', Carbon::today()->format('Y-m-d'))
                     ->where('payment_status', 'paid');
             })
-            ->get();
-        
+            ->get();        
         // Decode schedule_details untuk setiap booking
         foreach ($bookings as $booking) {
             if (is_string($booking->schedule_details)) {
@@ -93,19 +76,16 @@ class BookingController extends Controller
             }
         }
         
-        // Filter pemesanan member berdasarkan valid_until
         $filteredBookings = $bookings->filter(function ($booking) use ($selectedDate) {
             if ($booking->booking_type === 'member' && $booking->valid_until) {
-                // Pastikan tanggal saat ini belum melewati valid_until
                 return Carbon::now()->lessThanOrEqualTo($booking->valid_until);
             }
-            return true; // Tampilkan pemesanan biasa atau tanpa valid_until
+            return true;
         });
 
-        //array waktu dari 07:00 hingga 22:00
         $timeSlots = [];
-        for ($hour = 7; $hour <= 22; $hour++) {
-            $timeSlots[] = sprintf('%02d:00:00', $hour);
+        for ($jam = 7; $jam <= 22; $jam++) {
+            $timeSlots[] = sprintf('%02d:00:00', $jam);
         }
     
         $fields = Field::all();
@@ -311,37 +291,24 @@ class BookingController extends Controller
     {
         $totalHours = $request->input('total_hours', 0);
         $scheduleDetails = $request->input('schedule_details', []);
-
-        // Hitung jatah jam mingguan
         $allocatedWeeklyHours = $totalHours / 4;
-
-        // Hitung total jam yang dijadwalkan
         $scheduledWeeklyHours = 0;
 
         foreach ($scheduleDetails as $day => $schedule) {
             if (isset($schedule['start']) && isset($schedule['end'])) {
-                // Parsing waktu mulai dan selesai
                 $start = \Carbon\Carbon::createFromFormat('H:i', $schedule['start']);
                 $end = \Carbon\Carbon::createFromFormat('H:i', $schedule['end']);
 
-                // Pastikan waktu selesai lebih besar dari waktu mulai
                 if ($end->lessThanOrEqualTo($start)) {
                     throw ValidationException::withMessages([
                         'schedule_details' => "Waktu selesai untuk hari {$day} harus lebih besar dari waktu mulai.",
                     ]);
                 }
-
-                // Hitung durasi dalam menit menggunakan Carbon
                 $durationMinutes = $end->diffInMinutes($start);
-
-                // Konversi durasi menit ke jam desimal
                 $durationHours = $durationMinutes / 60;
-
                 $scheduledWeeklyHours += $durationHours;
             }
         }
-
-        // Validasi harus persis sama (dengan toleransi kecil untuk floating point)
         if (abs($scheduledWeeklyHours - $allocatedWeeklyHours) > 0.01) {
             $formattedAllocated = number_format($allocatedWeeklyHours, 2);
             $formattedScheduled = number_format($scheduledWeeklyHours, 2);
@@ -350,5 +317,4 @@ class BookingController extends Controller
             ]);
         }
     }
-
 }
