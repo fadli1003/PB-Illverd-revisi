@@ -13,11 +13,26 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Nama pemesan
-            $table->string('email'); // Email pemesan
-            $table->date('booking_date'); // Tanggal pemesanan
-            $table->time('start_time'); // Waktu mulai
-            $table->time('end_time'); // Waktu selesai
+            $table->foreignId('user_id')->constrained('users'); 
+            $table->foreignId('field_id')->constrained('fields'); 
+            $table->string('booking_type');
+            $table->integer('duration');        
+            $table->date('booking_date')->nullable();
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
+            $table->json('days')->nullable();
+            $table->json('schedule_details')->nullable();
+            $table->integer('total_hours')->nullable();
+            $table->decimal('remaining_amount', 10, 2)->nullable();
+            $table->date('valid_until')->nullable();
+            $table->decimal('amount_paid', 10, 2)->nullable();
+            $table->decimal('dp_amount', 10, 2)->nullable();
+            $table->string('status')->default('pending');
+            $table->string('payment_order_id')->nullable();
+            $table->string('payment_status')->default('unpaid');
+            // Tambahkan index untuk performa
+            $table->index('payment_order_id');
+            $table->index('payment_status');
             $table->timestamps();
         });
     }
