@@ -12,9 +12,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create('fields', function (Blueprint $table) {
-            $table->id(); // Kolom ID otomatis
-            $table->string('name'); // Nama lapangan
-            $table->timestamps(); // Kolom created_at dan updated_at
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
         });
     }
 

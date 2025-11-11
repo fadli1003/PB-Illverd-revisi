@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('membership', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade'); // Foreign key ke bookings
-            $table->date('new_valid_until')->nullable(); // Tanggal valid baru
-            $table->decimal('additional_hours', 8, 2)->nullable(); // Jumlah jam tambahan
-            $table->string('status')->default('perpanjang'); // Status pengajuan (pending, approved, rejected)            
+            $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
+            $table->date('new_valid_until')->nullable();
+            $table->decimal('additional_hours', 8, 2)->nullable();
+            $table->string('status')->default('perpanjang');          
             $table->timestamps();
         });
     }
