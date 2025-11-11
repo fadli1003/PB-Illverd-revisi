@@ -35,12 +35,16 @@
             <td>{{ $booking->id }}</td>
         </tr>
         <tr>
+            <th>Dipesan Tanggal:</th>
+            <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('d M Y h:i:s') }}</td>
+        </tr>
+        <tr>
             <th>Tanggal Pemesanan:</th>
             <td>{{ \Carbon\Carbon::parse($booking->booking_date)->format('d M Y') }}</td>
         </tr>
         <tr>
-            <th>Dipesan Tanggal:</th>
-            <td>{{ \Carbon\Carbon::parse($booking->created_at)->format('d M Y') }}</td>
+            <th>Jam:</th>
+            <td>{{\Carbon\Carbon::parse($booking->start_time)->format('h:i')}} - {{\Carbon\Carbon::parse($booking->end_time)->format('h:i')}}</td>
         </tr>
         <tr>
             <th>Lapangan:</th>

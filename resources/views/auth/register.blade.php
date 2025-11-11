@@ -1,77 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Penyewaan PB Illverd</title>
-    <link href="{{asset('assets/vendor/css/core.css')}}" rel="stylesheet">
-    <link href="{{asset('assets/vendor/css/theme-default.css')}}" rel="stylesheet">
+    {{-- <link href="{{asset('assets/vendor/css/core.css')}}" rel="stylesheet">
+    <link href="{{asset('assets/vendor/css/theme-default.css')}}" rel="stylesheet"> --}}
+    @vite(['resources/css/app.css', 'resources/css/animations.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="assets/css/login.css">
 </head>
-<body class="bg-light d-flex justify-content-center align-items-center vh-100">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card shadow-sm rounded-3">
-                    <div class="card-body p-4">
-                        <div class="card">
-                            <img width="400" height="80"  src="{{ asset('assets/img/bagus1.png')}}"">                            
-                        </div>
-                        <h4 class="text-center mb-2">Daftar Akun PB ILLVERD</h4>
-                        <h4 class="text-center mb-1">Register</h4>
-                        @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <ul>
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
-                        @if (session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-                        <form action="{{ route('register') }}" method="POST">
-                            @csrf
-                            <div class="mb-2">
-                                <label for="name" class="form-label">Nama</label>
-                                <input type="text" name="name" id="name" class="form-control" placeholder="Masukkan nama" required>
-                            </div>
-                            <div class="mb-2">
-                                <label for="no_Hp" class="form-label">No Handphone</label>
-                                <input type="tect" name="no_Hp" id="no_Hp" class="form-control" placeholder="Masukkan nomor handphone" required>
-                            </div>
-                            <div class="mb-2">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" name="email" id="email" class="form-control" placeholder="Masukkan email" required>
-                            </div>
-                            <div class="mb-2">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password" name="password" id="password" class="form-control" placeholder="Masukkan password" required>
-                            </div>
-                            <div class="mb-2">
-                                <label for="password_confirmation" class="form-label">Konfirmasi Password</label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Konfirmasi password" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Daftar</button>
-                        </form>
-                        <p class="text-center mt-2">
-                            Sudah punya akun? <a href="{{ route('login') }}" class="text-decoration-none text-primary">Login</a>
-                        </p>
-                    </div>
+
+<body class="bg-gray-900 bg-opacity-[.995] flex min-h-screen">
+    <div class="flex w-full flex-col items-center justify-center">
+        <div class="back absolute top-[5%] left-[5%]">
+            <a href="{{ route('home') }}" class="backButton">🏠Home</a><span class="text-gray-300">/</span><a href="{{ route('register') }}" class="backButton">Register</a>
+        </div>
+        <div class="flex pt-1 shadow-[0_2px_3px_rgba(0,0,255,.4)] rounded-lg justify-center bg-slate-900 w-[370px] h-auto max-[390px]:w-[93%]">
+            <div class="card-body p-6 justify-self-center w-full">
+                <div class="m-0 flex h-[90px]">
+                    <img class="rounded-[4px] object-cover w-full h-full" src="{{ asset('assets/img/bagus.png') }}"">
                 </div>
+                <h4 class="text-xl font-bold text-center mt-2 text-[#FFD700]">Selamat Datang di PB ILLVERD</h4>
+                <h4 class="text-lg text-center text-[#FFD700] font-semibold my-2">Register</h4>
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                @if (session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+                <form action="{{ route('register') }}" method="POST">
+                    @csrf
+                    <div class="mb-3 flex flex-col text-gray-300">
+                        <label for="name" class="mb-[2px] text-sm">Nama</label>
+                        <input type="text" name="name" id="name" class="rounded-md text-sm py-[6px] focus:border-[1.5px] focus:ring-0 focus:border-amber-500 bg-inherit"
+                            placeholder="Masukkan nama" required>
+                    </div>
+                    <div class="mb-3 flex flex-col text-gray-300">
+                        <label for="no_Hp" class="mb-[2px] text-sm">No Handphone</label>
+                        <input type="text" name="no_Hp" id="no_Hp" class="rounded-md text-sm py-[6px] focus:border-[1.5px] focus:ring-0 focus:border-amber-500 bg-inherit"
+                            placeholder="Masukkan nomor handphone" required>
+                    </div>
+                    <div class="mb-3 flex flex-col text-gray-300">
+                        <label for="email" class="mb-[2px] text-sm">Email</label>
+                        <input type="email" name="email" id="email" class="rounded-md text-sm py-[6px] focus:border-[1.5px] focus:ring-0 focus:border-amber-500 bg-inherit"
+                            placeholder="Masukkan email" required>
+                    </div>
+                    <div class="mb-3 flex flex-col text-gray-300">
+                        <label for="password" class="mb-[2px] text-sm">Password</label>
+                        <input type="password" name="password" id="password" class="rounded-md text-sm py-[6px] focus:border-[1.5px] focus:ring-0 focus:border-amber-500 bg-inherit"
+                            placeholder="Masukkan password" required>
+                    </div>
+                    <div class="mb-3 flex flex-col text-gray-300">
+                        <label for="password_confirmation" class="mb-[2px] text-sm">Konfirmasi Password</label>
+                        <input type="password" name="password_confirmation" id="password_confirmation"
+                            class="rounded-md text-sm py-[6px] focus:border-[1.5px] focus:ring-0 focus:border-amber-500 bg-inherit" placeholder="Konfirmasi password" required>
+                    </div>
+                    <div class="w-full flex justify-center">
+                    <button type="submit" class=" ring-[1px] ring-amber-500 mt-5 rounded-[4px] shadow-[0_2px_2px_rgb(0,0,255)] hover:-translate-y-[1px] py-[4px] w-[90%] transition-all duration-[.4s] hover:bg-amber-500 text-gray-300 hover:text-[#3f3307] font-semibold">Daftar</button>
+                    </div>
+                </form>
+                <p class="text-center mt-4 mb-2 text-xs text-gray-300">
+                    Sudah punya akun? <a href="{{ route('login') }}" class=" text-blue-500 hover:underline hover:text-blue-700 transition-all duration-[.4s] ease">Login</a>
+                </p>
             </div>
         </div>
+
+
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
             const password = document.getElementById('password');
             const confirmPassword = document.getElementById('password_confirmation');
 
-            form.addEventListener('submit', function (e) {
+            form.addEventListener('submit', function(e) {
                 if (password.value !== confirmPassword.value) {
                     e.preventDefault();
                     alert('Password tidak cocok!');
@@ -80,4 +93,5 @@
         });
     </script>
 </body>
+
 </html>

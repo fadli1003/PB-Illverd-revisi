@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('content')
-    <h3>Silahkan Ajukan Pemesanan</h3>
+    <div class="card mb-3"><h3 class="mt-3 text-center">Silahkan Ajukan Pemesanan</h3></div>
 
     <!-- Tampilkan pesan kesalahan jika ada -->
     @if ($errors->any())
@@ -25,9 +25,9 @@
         </div>
     @endif
     <div class="row">
-        <div class="col-5">
+        <div class="col-md-5">
             <div class="card mb-4">
-                <div class="card-header d-flex align-items-center">
+                <div class="form-header card-header d-flex align-items-center">
                     <h5 class="mb-0">Form Pemesanan Lapangan PB Illverd</h5>
                 </div>
                 <div class="card-body">
@@ -45,7 +45,7 @@
                         <div class="mb-3">
                             <label for="field_id" class="form-label">Pilih Lapangan:</label>
                             <select id="field_id" name="field_id" class="form-select" required>
-                                <option value="">-- Pilih Lapangan --</option>
+                                <option value=""><p class="select-placeholder">-- Pilih Lapangan --</p></option>
                                 @if(isset($fields) && $fields->isNotEmpty())
                                     @foreach ($fields as $field)
                                         <option value="{{ $field->id }}" {{ isset($field_id) && $field_id == $field->id ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
                             <!-- Durasi Sewa -->
                             <div class="mb-3">
                                 <label for="duration" class="form-label">Durasi Sewa (jam)</label>
-                                <select id="duration" name="duration" class="form-control">
+                                <select id="duration" name="duration" class="form-select">
                                     <option value="">-- Pilih Durasi --</option>
                                     <option value="1" {{ (old('duration', $duration ?? '')) == '1' ? 'selected' : '' }}>1 Jam</option>
                                     <option value="2" {{ (old('duration', $duration ?? '')) == '2' ? 'selected' : '' }}>2 Jam</option>
@@ -117,7 +117,7 @@
                             <!-- Total Jam Sewa (per Bulan) -->
                             <div class="mb-3">
                                 <label for="total_hours" class="form-label">Total Jam Sewa (per Bulan):</label>
-                                <<select id="total_hours" name="total_hours" class="form-control">
+                                <select id="total_hours" name="total_hours" class="form-control">
                                     <option value="">-- Pilih Total Jam Sewa (per Bulan) --</option>
                                     <option value="12" {{ (old('duration', $duration ?? '')) == '12' ? 'selected' : '' }}>12 Jam</option>
                                     <option value="16" {{ (old('duration', $duration ?? '')) == '16' ? 'selected' : '' }}>16 Jam</option>
@@ -179,34 +179,28 @@
                             </div>
                         </div>                        
                         
-                        {{-- <!-- Upload Bukti Transfer -->
-                        <div class="mb-3">
-                            <label for="proof_of_payment" class="form-label">Upload Bukti Transfer</label>
-                            <input type="file" class="form-control" id="proof_of_payment" name="proof_of_payment" accept="image/*">
-                        </div>  --}}
-                        
                         <!-- Tombol Submit -->
-                        <button type="submit" class="btn btn-primary">Pesan Sekarang</button> 
+                        <button type="submit" class="btn btn-primary pesan-btn mt-4 mb-3">Pesan Sekarang</button> 
                     </form>
                 </div>
             </div>
         </div>
-        <div class="col-7">
-            <div class="card mb-4">                
-                <div class="card-body">
-                    <!-- Form Pilih Tanggal -->
-                    <div class="card-header d-flex justify-content-between mb-0">
-                        <div class="form-container">
-                            <form id="date-form">
-                                <label for="date">Pilih Tanggal:</label>
-                                <input type="date" id="date" name="date" value="{{ $selectedDate }}" required>
-                                <button class="btn btn-primary" type="submit">Lihat Jadwal</button>
-                            </form>
-                        </div>
+        <div class="col-md-7">
+            <div class="card mb-4">
+                <!-- Form Pilih Tanggal -->
+                <div class="card-header d-flex justify-content-between mb-0">
+                    <div class="form-container">
+                        <form id="date-form">
+                                {{-- <label for="date">Pilih Tanggal:</label> --}}
+                            <input class="input-tggl" type="date" id="date" name="date" value="{{ $selectedDate }}" required>
+                            <button class="jadwal-btn" type="submit">Lihat Jadwal</button>
+                        </form>
                     </div>
+                </div>                
+                <div class="card-body">                    
                     <!-- Container untuk menampilkan jadwal -->
                     <div id="jadwal-container">
-                        @include('jadwal')
+                        @include('main.jadwal')
                     </div>
 
                 </div>

@@ -20,17 +20,11 @@ class PaymentController extends Controller
         Config::$is3ds = config('midtrans.is_3ds');
     }
 
-    /**
-     * Menampilkan halaman pembayaran untuk booking tertentu
-     */
     public function showPaymentPage(Booking $booking)
     {
-        // Pastikan user memiliki akses ke booking ini
         if ($booking->user_id !== auth()->id() && auth()->user()->role !== 'admin') {
             abort(403, 'Unauthorized access to this booking.');
         }
-
-        // Pastikan booking belum dibayar
         if ($booking->payment_status !== 'unpaid') {
             return redirect()->route('book')->with('info', 'Booking sudah diproses sebelumnya.');
         }
@@ -38,37 +32,25 @@ class PaymentController extends Controller
         return view('bookings.payment', compact('booking'));
     }
 
-    /**
-     * Membuat token pembayaran Midtrans
-     */
     public function createPayment(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'booking_id' => 'required|exists:bookings,id',
         ]);
-
         $booking = Booking::findOrFail($validated['booking_id']);
-
-        // Pastikan user memiliki akses
         if ($booking->user_id !== auth()->id() && auth()->user()->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // // Pastikan booking belum dibayar
-        // if ($booking->payment_status !== 'unpaid') {
-        //     return response()->json(['error' => 'Booking sudah diproses sebelumnya.'], 400);
-        // }
-
-        // // Pastikan ada DP yang harus dibayar
-        // if ($booking->dp_amount <= 0) {
-        //     return response()->json(['error' => 'Tidak ada DP yang harus dibayar.'], 400);
-        // }
+        if ($booking->payment_status !== 'unpaid') {
+            return response()->json(['error' => 'Booking sudah diproses sebelumnya.'], 400);
+        }
 
         // Parameter untuk Midtrans
         $params = [
             'transaction_details' => [
                 'order_id' => uniqid() . '-' . $booking->id,
-                'gross_amount' => (int) $booking->dp_amount, // Gunakan DP amount
+                'gross_amount' => (int) $booking->dp_amount,
             ],
             'customer_details' => [
                 'first_name' => auth()->user()->name,
@@ -91,10 +73,8 @@ class PaymentController extends Controller
         ];
 
         try {
-            // Generate Snap Token
             $snapToken = Snap::getSnapToken($params);
 
-            // Simpan order_id dan status pembayaran ke booking
             $booking->update([
                 'payment_order_id' => $params['transaction_details']['order_id'],
                 'payment_status' => 'pending'
@@ -115,9 +95,6 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Handle notifikasi pembayaran dari Midtrans
-     */
     public function paymentNotification(Request $request)
     {      
         $json = $request->getContent();
@@ -127,7 +104,6 @@ class PaymentController extends Controller
         $orderId = $notification->order_id;
         $fraudStatus = $notification->fraud_status;
 
-        // Cari booking berdasarkan order_id
         $booking = Booking::where('payment_order_id', $orderId)->first();
 
         if (!$booking) {
@@ -153,23 +129,17 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Handle pembayaran sukses
-     */
     private function handlePaymentSuccess($booking)
     {
         $booking->update([
             'payment_status' => 'paid',
-            'status' => 'approved' // Sesuaikan logika status
+            'status' => 'approved'
         ]);
 
         // Kirim notifikasi email jika perlu
         // Mail::to($booking->user->email)->send(new PaymentSuccessMail($booking));
     }
 
-    /**
-     * Deskripsi booking untuk Midtrans
-     */
     private function getBookingDescription($booking)
     {
         if ($booking->booking_type === 'regular') {
